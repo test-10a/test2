@@ -1,0 +1,4 @@
+# metadata.yml
+.env:
+  access_policy: "public_audit"
+  provenance: "security_team"
