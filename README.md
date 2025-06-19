@@ -9,4 +9,4 @@
 python -m compliance_suite validate --level=3
 
 # Full system certification (produces audit report)
-python -m compliance_suite certify --output=audit_report.md
+python -m compliance_suite certify --output=audit_report.json
