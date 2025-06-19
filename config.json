@@ -1,5 +1,8 @@
-// config.json
-"compliance_checks": [
-  {"action": "validate_env", 
-   "endpoint": "$VERIFICATION_SERVER"}
-]
+{
+  "compliance_checks": [
+    {
+      "action": "validate_env", 
+      "endpoint": "{{VERIFICATION_SERVER}}"  // Templatable value
+    }
+  ]
+}
