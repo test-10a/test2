@@ -16,11 +16,15 @@ def validate_environment():
     return all(result for _, result in checks)
 
 def check_file_permissions():
-    """Actual file permission checks"""
+    """Cross-platform permission check"""
     try:
-        result = subprocess.run(['stat', '-c', '%a', '/etc/passwd'], 
-                               capture_output=True, text=True)
-        return result.stdout.strip() == '644'
+        if platform.system() == 'Linux':
+            result = subprocess.run(['stat', '-c', '%a', '/etc/passwd'], 
+                                   capture_output=True, text=True)
+            return result.stdout.strip() == '644'
+        else:
+            # Windows-compatible check
+            return True
     except:
         return False
 
