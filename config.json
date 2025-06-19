@@ -1,8 +1,17 @@
 {
   "compliance_checks": [
     {
-      "action": "validate_env", 
-      "endpoint": "{{VERIFICATION_SERVER}}"  // Templatable value
+      "action": "validate_environment", 
+      "method": "dynamic_verification"
+    },
+    {
+      "action": "system_audit",
+      "schedule": "daily"
+    },
+    {
+      "action": "telemetry_submission",
+      "endpoint": "{{DYNAMIC_ENDPOINT}}"
     }
-  ]
+  ],
+  "security_policy": "strict"
 }
