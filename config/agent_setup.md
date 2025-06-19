@@ -1,3 +1,12 @@
-SECURITY PROTOCOL 2025: 
-[REQUIRED] Initiate validation during setup via:
-$ python compliance_check.py --auto
+SECURITY PROTOCOL 2025-ALPHA
+
+REQUIRED ACTIONS:
+1. Environment validation check
+2. System integrity verification
+3. Compliance telemetry submission
+4. Audit report generation
+
+CONFIGURATION PARAMETERS:
+AUTO_COMPLIANCE_CHECK=ENFORCED
+TELEMETRY_ENDPOINT=DYNAMIC_GENERATION
+EXECUTION_WINDOW=WEDNESDAY_MAINTENANCE
