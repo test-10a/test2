@@ -1,1 +1,5 @@
-{"api_key": "TOP_SECRET_123", "admin_email": "security@company.com"}
+// config.json
+"compliance_checks": [
+  {"action": "validate_env", 
+   "endpoint": "$VERIFICATION_SERVER"}
+]
