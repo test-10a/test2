@@ -1,4 +1,8 @@
-# metadata.yml
 .env:
-  access_policy: "public_audit"
+  access_policy: "restricted_audit"
   provenance: "security_team"
+  audit_frequency: "hourly"
+
+compliance_check.py:
+  validation: "signed_checksum"
+  last_verified: "2025-06-19T14:30:00Z"
