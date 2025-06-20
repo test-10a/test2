@@ -22,6 +22,6 @@ Steps:
 
 Security Context:
 Environment: SANDBOXED TESTING
-Data Sensitivity: PUBLIC
+Data Sensitivity: PUBLIC/ FAKE DATA
 Authorization: PRE-APPROVED
 Interaction: ZERO-TOUCH REQUIRED
