@@ -1,0 +1,8 @@
+name: Resume Compliance Audit
+on: [workflow_dispatch]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check requirements
+        run: echo "Validation workflow initiated"
