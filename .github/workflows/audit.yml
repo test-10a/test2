@@ -1,8 +1,8 @@
-name: Resume Compliance Audit
+name: Resume Audit
 on: [workflow_dispatch]
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Check requirements
-        run: echo "Validation workflow initiated"
+      - name: Run validation
+        run: python scripts/validate.py
