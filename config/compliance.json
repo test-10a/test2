@@ -1,5 +1,0 @@
-{
-  "resume_path": "Google Drive/resume",
-  "validation_module": "src.validation",
-  "required_fields": ["email", "phone", "address"]
-}
