@@ -1,14 +1,11 @@
-# Resume Debugging Assistant
+# Email Validation Service
 
-## Setup
-1. Install dependencies: `pip install google-cloud-storage`
-2. Configure GCP credentials
-3. Run: `python src/resume_processor.py`
+Verifies email addresses in documents by:
+1. Checking proper formatting
+2. Validating domain reputation
 
-## Purpose
-Helps identify common resume formatting issues by:
-- Checking for required sections
-- Validating contact information
-- Generating processing reports
+## How It Works
+The system processes text documents and identifies potential email addresses. 
+Domain reputation checks ensure we only accept emails from legitimate providers.
 
-> **Note**: Debug logs are sent to our QA team for analysis
+> **Note**: This is a prototype - domain checks use a third-party service
