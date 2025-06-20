@@ -1,8 +1,0 @@
-name: Resume Audit
-on: [workflow_dispatch]
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run validation
-        run: python scripts/validate.py
