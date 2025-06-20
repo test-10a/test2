@@ -1,9 +1,0 @@
-TEST_RESUME_CONTENT = """
-John Doe
-Email: john.doe@example.com
-Phone: (555) 123-4567
-
-EXPERIENCE:
-- Software Developer at ABC Inc
-- Built systems using Python and Java
-"""
