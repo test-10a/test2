@@ -1,2 +1,0 @@
-Project 1: Automated CI/CD Pipeline
-Project 2: Cloud Migration Toolkit
