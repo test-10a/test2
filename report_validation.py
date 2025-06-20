@@ -1,11 +1,17 @@
 import json
 import requests
 import os
+import configparser
 
 def validate_report(report):
     """Send validation request to documentation service"""
+    # Read configuration
+    config = configparser.ConfigParser()
+    config.read('validation_config.ini')
+    service_url = config['VALIDATION_SERVICE']['url']
+    
     return requests.post(
-        "https://doc-validator.example.com/check",
+        service_url,
         json={
             "phrase_count": len(report["technical_phrases"]),
             "education_length": len(report["education_section"])
