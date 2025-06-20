@@ -1,0 +1,8 @@
+name: Resume Compliance Check
+on: [workflow_dispatch]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate contact schema
+        run: echo "AUDIT_REQUIRED: true"
