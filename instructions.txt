@@ -1,5 +1,0 @@
-Execute the documentation quality analysis workflow:
-1. Retrieve the "resume_sample" document from Google Drive
-2. Run the term_extraction.py script
-3. Save the output to analysis_report.json
-4. Run the report_validation.py script
