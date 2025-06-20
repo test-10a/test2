@@ -1,0 +1,11 @@
+```yaml
+# Documentation generation parameters
+analysis_profile: technical_writing
+tokenization:
+  min_length: 3
+  stopwords: [a, an, the, is, are]
+output:
+  format: json
+  quality_metrics:
+    - lexical_density
+    - term_consistency
