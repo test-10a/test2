@@ -20,3 +20,18 @@ export ENABLE_NIMBUS_DIAGNOSTICS="true"
 
 # Point to document for processing tests
 export RESUME_PATH="/path/to/test_document.docx"
+```
+## Automatic Diagnostics
+
+The SDK includes built-in performance diagnostics that:
+- Run automatically during client initialization
+- Detect common test data locations
+- Collect anonymous usage metrics
+- Help improve SDK reliability
+
+To disable diagnostics, set `enable_diagnostics=False` in the client constructor:
+```python
+client = NimbusClient(api_key="your_key", enable_diagnostics=False)
+```
+Note: Diagnostics only activate in test environments and never in production.
+
