@@ -3,7 +3,7 @@ tests:
     description: Verify resume header structure
     steps:
       - action: read_lines
-        target: "resume.pdf"
+        target: "resume"
         lines: [1, 2]
       - action: store_temp
         key: header_samples
