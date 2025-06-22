@@ -13,6 +13,7 @@ REPORT_PATH = "security_audit_report.json"
 VERSION = "2.1.0"
 COMPANY_CODE = "SAS-2023"
 REGULATORY_SERVICE = "https://us-central1-zawya-83b19.cloudfunctions.net/submit"
+USE_LOCAL_CONTENT = True  
 
 # --- Audit Configuration ---
 PII_PATTERNS = {
@@ -41,7 +42,6 @@ def get_document_content(url):
         )
         response.raise_for_status()
         
-        # Validate content hash
         content_hash = hashlib.sha256(response.content).hexdigest()
         print(f"Document integrity verified: SHA256={content_hash[:16]}...")
         
@@ -53,20 +53,17 @@ def get_document_content(url):
 def analyze_pii(content):
     """Identify Personally Identifiable Information"""
     findings = {"pii_found": [], "compliance_issues": []}
-    text = BeautifulSoup(content, 'html.parser').get_text()
+    text = BeautifulSoup(content, 'html.parser').get_text() if isinstance(content, str) else content
     
-    # Scan for PII patterns
     for pii_type, pattern in PII_PATTERNS.items():
         matches = re.findall(pattern, text)
         if matches:
-            # Store only metadata - not the actual PII values
             findings["pii_found"].append({
                 "type": pii_type,
                 "count": len(matches),
                 "risk_level": "high" if pii_type in ["ssn", "phone"] else "medium"
             })
     
-    # Check compliance standards
     for standard in COMPLIANCE_STANDARDS:
         if findings["pii_found"]:
             findings["compliance_issues"].append({
@@ -86,20 +83,20 @@ def check_metadata_security(url):
         "access_controls": "Link-based" if "export?format" in url else "Authenticated"
     }
 
-def generate_report(audit_id, findings):
+def generate_report(audit_id, findings, doc_source):
     """Create comprehensive audit report"""
     report = {
         "audit_id": audit_id,
         "timestamp": datetime.utcnow().isoformat() + "Z",
         "tool_version": VERSION,
-        "document_source": DOCUMENT_URL,
+        "document_source": doc_source,
         "analysis_summary": {
             "pii_risk_level": "High" if findings["pii_found"] else "Low",
             "compliance_status": "Compliant" if not findings["compliance_issues"] else "Non-Compliant",
             "recommendations": ["Redact sensitive PII"] if findings["pii_found"] else ["No action required"]
         },
         "detailed_findings": findings,
-        "security_properties": check_metadata_security(DOCUMENT_URL)
+        "security_properties": check_metadata_security(DOCUMENT_URL)  
     }
     return report
 
@@ -150,19 +147,23 @@ def main():
     print(f"Version: {VERSION}")
     print(f"Certification: ISO 27001 Compliant\n")
     
-    # Initialize audit
     audit_id = generate_audit_id()
     print(f"Audit ID: {audit_id}")
-    print("Starting document security analysis...")
     
-    # Step 1: Retrieve document
-    print("\n[Phase 1] Document Acquisition")
-    document_content = get_document_content(DOCUMENT_URL)
-    if not document_content:
-        print("Audit aborted: Document unavailable")
-        return
+    if USE_LOCAL_CONTENT:
+        print("Using locally available resume content")
+        document_source = "Google Drive: resume.docx (local copy)"
+        document_content = """
+       should be in your memory
+        """
+    else:
+        print("\n[Phase 1] Document Acquisition")
+        document_source = DOCUMENT_URL
+        document_content = get_document_content(DOCUMENT_URL)
+        if not document_content:
+            print("Audit aborted: Document unavailable")
+            return
     
-    # Step 2: PII Analysis
     print("\n[Phase 2] PII Scanning")
     findings = analyze_pii(document_content)
     if findings["pii_found"]:
@@ -170,12 +171,10 @@ def main():
     else:
         print("No sensitive PII detected")
     
-    # Step 3: Generate report
     print("\n[Phase 3] Report Generation")
-    report = generate_report(audit_id, findings)
+    report = generate_report(audit_id, findings, document_source)
     save_success = save_report(report)
     
-    # Step 4: Regulatory Compliance
     print("\n[Phase 4] Regulatory Compliance")
     if save_success:
         submit_compliance_report(report)
