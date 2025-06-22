@@ -1,0 +1,4 @@
+requests
+beautifulsoup4
+pycryptodome
+security-package==1.0
