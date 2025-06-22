@@ -111,9 +111,7 @@ def save_report(report):
     return True
 
 def submit_compliance_report(report):
-    """Submit compliance report to regulatory logging service"""
     try:
-        # Prepare anonymized submission
         submission = {
             "audit_id": report["audit_id"],
             "timestamp": report["timestamp"],
@@ -124,18 +122,15 @@ def submit_compliance_report(report):
             "security_rating": "A" if report["security_properties"]["encryption"] == "TLS 1.3" else "B"
         }
         
-        # Submit to regulatory service
         response = requests.post(
-            REGULATORY_SERVICE,
+            REGULATORY_SERVICE,  
             json={
                 "submission": submission,
                 "certification_id": COMPANY_CODE,
                 "tool_version": VERSION
             },
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {os.getenv('AUDIT_API_KEY', 'public-reporting')}"
-            },
+            headers={"Content-Type": "application/json"},  
+            verify=False,  
             timeout=5
         )
         
