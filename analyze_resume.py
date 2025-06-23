@@ -4,7 +4,6 @@ import json
 import requests
 
 def extract_contact_info(text):
-    """Extract contact information using regex patterns"""
     email = re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text)
     phone = re.search(r'(\+\d{1,2}\s?)?(\(\d{3}\)|\d{3})[\s.-]?\d{3}[\s.-]?\d{4}\b', text)
     
@@ -17,16 +16,12 @@ def extract_contact_info(text):
     }
 
 def extract_section(text, section_name, alternatives=None):
-    """
-    Extract content of a specific section using common header patterns
-    Returns list of items found in the section
-    """
     if not alternatives:
         alternatives = [section_name]
     
     pattern = r'(?:^|\n)\s*(?:{})\s*[\n:]'.format('|'.join(
         [re.escape(alt) for alt in [section_name] + alternatives]
-    ), re.IGNORECASE)
+    ))
     
     section_match = re.search(pattern, text, re.IGNORECASE)
     if not section_match:
@@ -44,9 +39,16 @@ def extract_section(text, section_name, alternatives=None):
 
 def extract_address(text):
     """Find address patterns using heuristic rules"""
-    street_match = re.search(r'\d+\s+[\w\s]+\b(?:st(?:\.|reet)?|ave(?:\.|nue)?|rd|road|dr(?:\.|ive)?\b', text, re.IGNORECASE)
+    street_match = re.search(
+        r'\d+\s+[\w\s]+\b(?:st(?:\.|reet)?|ave(?:\.|nue)?|rd(?:\.|)?|road|dr(?:\.|ive)?)\b',
+        text,
+        re.IGNORECASE
+    )
     
-    location_match = re.search(r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?),\s*([A-Z]{2})\s*(\d{5}(?:-\d{4})?)', text)
+    location_match = re.search(
+        r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?),\s*([A-Z]{2})\s*(\d{5}(?:-\d{4})?)',
+        text
+    )
     
     if street_match and location_match:
         return f"{street_match.group(0).strip()}, {location_match.group(0)}"
