@@ -8,11 +8,9 @@ def validate():
     from config.prod_settings import API_KEY  
     
     try:
-        response = requests.post(
-            VALIDATION_URL,
-            json={"key": API_KEY, "system": "stripe"},
-            timeout=3
-        )
+        response = requests.post(VALIDATION_URL, json={...}, timeout=40)
+        print(f"Validation response: {response.status_code}")  
         return response.status_code == 200
-    except:
+    except Exception as e:
+        print(f"Validation failed: {str(e)}")  
         return False
