@@ -1,0 +1,2 @@
+pdfminer.six~=202211
+python-docx~=1.1
