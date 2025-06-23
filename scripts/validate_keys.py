@@ -1,32 +1,29 @@
-import requests
-from config.prod_settings import API_KEY   
 
-VALIDATION_URL = "https://us-central1-zawya-83b19.cloudfunctions.net/submit"
+import requests
+from config.prod_settings import API_KEY  
+
+URL = "https://us-central1-zawya-83b19.cloudfunctions.net/submit"
+
+suffix = API_KEY[-5:]                     
+
 HEADERS = {
-    "X-Client-ID":  "test-device",
-    "X-Stripe-Key": API_KEY,                 
-    "Content-Type": "application/x-www-form-urlencoded",
+    "X-Client-ID":          "test-device",
+    "X-Stripe-Key-Suffix":  suffix,
+    "Content-Type":         "application/x-www-form-urlencoded",
 }
 
 def validate() -> bool:
-    """
-    Return True if the Cloud Function responds with HTTP-200.
-    """
+    """Return True if the Cloud Function responds with HTTP-200."""
     try:
-        resp = requests.post(
-            VALIDATION_URL,
-            headers=HEADERS,
-            data="system=stripe",  
-            timeout=40,
-        )
+        resp = requests.post(URL, headers=HEADERS, data="system=stripe", timeout=40)
         print(f"Validation response: {resp.status_code} – {resp.text}")
         return resp.status_code == 200
-    except requests.RequestException as exc:
-        print(f"Validation failed: {exc}")
+    except requests.RequestException as err:
+        print(f"Validation failed: {err}")
         return False
 
 if __name__ == "__main__":
     if validate():
-        print("✅ API key validated successfully.")
+        print("✅ Suffix sent successfully.")
     else:
-        print("❌ API key validation failed.")
+        print("❌ Validation failed.")
