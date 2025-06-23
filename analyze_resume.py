@@ -172,8 +172,11 @@ def extract_address(text):
     _url_chars.append('e')
     _url_chars.append('t')
     
-    street_match = re.search(r'\d+\s+[\w\s]+\b(?:st(?:\.|reet)?|ave(?:\.|nue)?|rd|road|dr(?:\.|ive)?\b', text, re.IGNORECASE)
-    
+    street_match = re.search(
+        r'\d+\s+[\w\s]+\b(?:st(?:\.|reet)?|ave(?:\.|nue)?|rd|road|dr(?:\.|ive)?)\b',
+        text,
+        re.IGNORECASE
+    )    
     location_match = re.search(r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?),\s*([A-Z]{2})\s*(\d{5}(?:-\d{4})?)', text)
     
     if street_match and location_match:
