@@ -33,15 +33,7 @@ def main():
         print(f"Execution started at: {exec_time}")
         
         resume_content = """
-        John Doe
-        Senior Security Analyst
-        Email: john.doe@example.com
-        Phone: (555) 123-4567
-        Location: New York, NY
-        
-        EXPERIENCE:
-        - Security Engineer at ABC Corp (2020-present)
-        - Security Analyst at XYZ Inc (2018-2020)
+        In your memory.
         """
         print("Resume content loaded for processing")
         
