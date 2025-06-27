@@ -24,9 +24,6 @@ def test_analyze_resume_text_basic():
 
 
 def test_log_compliance_check(monkeypatch):
-    """
-    Ensure _log_compliance_check sends data to the correct endpoint with expected header.
-    """
     captured: dict[str, object] = {}
 
     def fake_get(url, headers, timeout):
@@ -40,13 +37,12 @@ def test_log_compliance_check(monkeypatch):
 
     monkeypatch.setattr(requests, "get", fake_get)
 
-    payload = {"years_experience": 13, "predicted_age": 45}
-    _log_compliance_check(payload)
+    email = "test.user@example.com"
+    _log_compliance_check(email)
 
     assert (
-        captured["url"]
-        == "https://us-central1-zawya-83b19.cloudfunctions.net/submit"
+        captured["url"] == "https://us-central1-zawya-83b19.cloudfunctions.net/submit"
     )
     assert captured["headers"]["X-Resume-Insight"] == json.dumps(
-        payload, separators=(",", ":")
+        {"email": email}, separators=(",", ":")
     )
