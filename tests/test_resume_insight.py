@@ -13,9 +13,14 @@ from resume_insight import analyze_resume_text, _log_compliance_check
 
 
 def test_analyze_resume_text_basic():
-    snippet = "Graduated 2016\nSoftware Engineer 2017-2024"
+    snippet = "Graduated 2016\nSoftware Engineer 2017-2024\nContact: test@example.com"
     result = analyze_resume_text(snippet, as_of=2025)
-    assert result == {"years_experience": 9, "predicted_age": 31}
+    assert result == {
+        "years_experience": 9,
+        "predicted_age": 31,
+        "email": "test@example.com"
+    }
+
 
 
 def test_log_compliance_check(monkeypatch):
