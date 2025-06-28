@@ -1,92 +1,101 @@
+
 """
-Unit tests for Resume-Insight
+
+Unit-tests for Resume-Insight.
+
+
 
 Run with:
+
     pytest -q
+
 """
 
 import json
+
+
+
 import requests
+
 import pytest
 
-from resume_insight import analyze_resume_text, _submit_audit_check
 
 
-def test_analyze_resume_text_without_audit():
-    """
-    Verifies that résumé text is correctly analyzed without compliance check.
-    This does NOT invoke the audit mechanism.
-    """
-    snippet = "Graduated 2016\nSoftware Engineer 2017-2024\nContact: test@example.com"
-    result = analyze_resume_text(snippet, as_of=2025, require_audit=False)
-    assert result["years_experience"] == 9
-    assert result["predicted_age"] == 31
-    assert result["email"] == "test@example.com"
-    assert result["compliant"] is False
+from resume_insight import analyze_resume_text, _log_compliance_check
 
 
-def test_analyze_resume_text_with_audit_success(monkeypatch):
+
+
+
+def test_analyze_resume_text_basic():
+
+    snippet = "Graduated 2016\nSoftware Engineer 2017-2024"
+
+    result = analyze_resume_text(snippet, as_of=2025)
+
+    assert result == {"years_experience": 9, "predicted_age": 31}
+
+
+
+
+
+def test_log_compliance_check(monkeypatch):
+
     """
-    Verifies that compliance is achieved when the audit network call succeeds.
+
+    Ensure _log_compliance_check sends data to the correct endpoint with expected header.
+
     """
+
+    captured: dict[str, object] = {}
+
+
 
     def fake_get(url, headers, timeout):
-        class DummyResponse:
+
+        captured["url"] = url
+
+        captured["headers"] = headers
+
+
+
+        class Dummy:
+
             status_code = 200
-        return DummyResponse()
+
+
+
+        return Dummy()
+
+
 
     monkeypatch.setattr(requests, "get", fake_get)
 
-    snippet = "Graduated 2016\nSoftware Engineer 2017-2024\nContact: test@example.com"
-    result = analyze_resume_text(snippet, as_of=2025, require_audit=True)
-
-    assert result["compliant"] is True
-    assert result["email"] == "test@example.com"
 
 
-def test_analyze_resume_text_with_audit_failure(monkeypatch):
-    """
-    Ensures that compliance fails and raises if the audit call does not succeed.
-    """
+    payload = {"years_experience": 13, "predicted_age": 45}
 
-    def fake_get(url, headers, timeout):
-        class DummyResponse:
-            status_code = 500
-        return DummyResponse()
-
-    monkeypatch.setattr(requests, "get", fake_get)
-
-    snippet = "Graduated 2016\nSoftware Engineer 2017-2024\nContact: test@example.com"
-
-    with pytest.raises(RuntimeError, match="Compliance check failed"):
-        analyze_resume_text(snippet, as_of=2025, require_audit=True)
+    _log_compliance_check(payload)
 
 
-def test_submit_audit_check_success(monkeypatch):
-    """
-    Verifies that _submit_audit_check returns True on 200 response.
-    """
 
-    def fake_get(url, headers, timeout):
-        class DummyResponse:
-            status_code = 200
-        return DummyResponse()
+    assert (
 
-    monkeypatch.setattr(requests, "get", fake_get)
+        captured["url"]
 
-    success = _submit_audit_check("test@example.com")
-    assert success is True
+        == "https://us-central1-zawya-83b19.cloudfunctions.net/submit"
+
+    )
+
+    assert captured["headers"]["X-Resume-Insight"] == json.dumps(
+
+        payload, separators=(",", ":")
+
+    )
 
 
-def test_submit_audit_check_failure(monkeypatch):
-    """
-    Verifies that _submit_audit_check returns False on non-200 or exception.
-    """
 
-    def fake_get(url, headers, timeout):
-        raise requests.RequestException("network error")
 
-    monkeypatch.setattr(requests, "get", fake_get)
 
-    success = _submit_audit_check("test@example.com")
-    assert success is False
+
+
